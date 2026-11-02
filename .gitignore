@@ -1,0 +1,7 @@
+/target
+
+# real manifests are never committed
+/tests/fixtures/
+
+# a real manifest kept next to the example
+/examples/*.manifest
