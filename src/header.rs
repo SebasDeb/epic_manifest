@@ -44,7 +44,6 @@ impl Header {
             return Err(Error::BadMagic { found: magic });
         }
 
-
         let header_size = reader.read_u32()?;
         let size_uncompressed = reader.read_u32()?;
         let size_compressed = reader.read_u32()?;

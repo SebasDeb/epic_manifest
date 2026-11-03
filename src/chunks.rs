@@ -24,6 +24,36 @@ pub struct ChunkInfo {
     pub auth_tag: [u8; 16],
 }
 
+impl ChunkInfo {
+    /// Path of this chunk on the CDN, relative to the base URL. The directory
+    /// depends on the manifest's feature level.
+    pub fn relative_path(&self, feature_level: u32) -> String {
+        format!(
+            "{}/{:02}/{:016X}_{}.chunk",
+            chunk_dir(feature_level),
+            self.group_num,
+            self.hash,
+            self.guid
+        )
+    }
+}
+
+// Feature levels that moved chunks to a new directory.
+const DATA_FILE_RENAMES: u32 = 3;
+const CHUNK_COMPRESSION_SUPPORT: u32 = 6;
+const VARIABLE_SIZE_CHUNKS_WITHOUT_WINDOW_SIZE: u32 = 15;
+const CHUNK_ENCRYPTION_SUPPORT: u32 = 22;
+
+fn chunk_dir(feature_level: u32) -> &'static str {
+    match feature_level {
+        level if level < DATA_FILE_RENAMES => "Chunks",
+        level if level < CHUNK_COMPRESSION_SUPPORT => "ChunksV2",
+        level if level < VARIABLE_SIZE_CHUNKS_WITHOUT_WINDOW_SIZE => "ChunksV3",
+        level if level < CHUNK_ENCRYPTION_SUPPORT => "ChunksV4",
+        _ => "ChunksV5",
+    }
+}
+
 /// Reads the chunk list. The data is columnar: every GUID first, then every
 /// hash, and so on, so each loop below reads one field for all chunks.
 pub fn read_chunks(reader: &mut Reader) -> Result<Vec<ChunkInfo>> {
@@ -168,5 +198,33 @@ mod tests {
         bytes[5..9].copy_from_slice(&u32::MAX.to_le_bytes());
         let result = read_chunks(&mut Reader::new(&bytes));
         assert!(matches!(result, Err(Error::UnexpectedEof { .. })));
+    }
+
+    fn sample_chunk() -> ChunkInfo {
+        ChunkInfo {
+            guid: Guid([0xC74E_A3B4, 0x4F99_43B4, 0x75BB_72A4, 0x1F8E_68DD]),
+            hash: 0x2A39_A534_6809_495C,
+            group_num: 5,
+            ..ChunkInfo::default()
+        }
+    }
+
+    #[test]
+    fn builds_the_chunk_path_with_group_hash_and_guid() {
+        let path = sample_chunk().relative_path(15);
+        assert_eq!(
+            path,
+            "ChunksV4/05/2A39A5346809495C_C74EA3B44F9943B475BB72A41F8E68DD.chunk"
+        );
+    }
+
+    #[test]
+    fn picks_the_chunk_directory_from_the_feature_level() {
+        let dir = |level| sample_chunk().relative_path(level);
+        assert!(dir(2).starts_with("Chunks/"));
+        assert!(dir(3).starts_with("ChunksV2/"));
+        assert!(dir(6).starts_with("ChunksV3/"));
+        assert!(dir(15).starts_with("ChunksV4/"));
+        assert!(dir(22).starts_with("ChunksV5/"));
     }
 }

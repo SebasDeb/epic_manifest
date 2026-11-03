@@ -23,6 +23,11 @@ The library logs through the [`log`](https://docs.rs/log) facade and never
 chooses a logger itself. The example installs a colored `env_logger`; set
 `RUST_LOG=debug` to see each parsing step.
 
+`Manifest::chunk_url(&chunk, base_url)` builds the download URL of a chunk as
+`{base_url}/{ChunksVn}/{group:02}/{hash:016X}_{guid}.chunk`. The directory comes
+from the meta feature level (`Chunks` to `ChunksV5`). The base URL is the
+caller's to provide.
+
 Real manifests are not part of this repository. If you want to run the
 example against one, a good place to keep it is `tests/fixtures/`, which is
 git-ignored.
@@ -41,14 +46,15 @@ git-ignored.
 - Downloading chunks or rebuilding files.
 - The encrypted-data section of version 23 and later.
 - Computing a build id when the manifest does not store one.
+- The base64 chunk path with a `plain`/secret directory that Legendary uses for
+  version 22 and later. The hex path below is used for every version instead.
 - Oodle, async or a command line beyond the example.
 
 ## Roadmap
 
 The order below is the order I plan to work in. Nothing here is started yet.
 
-1. Compute the build id when the manifest does not store one, and build the
-   download URL of each chunk from the custom fields.
+1. Compute the build id when the manifest does not store one.
 2. Check the parser against real manifests from more games and versions.
 3. JSON manifests, which older builds use. This needs `serde_json`.
 4. Encrypted manifests (AES-GCM).

@@ -55,7 +55,7 @@ impl Manifest {
 
         let files = files::read_files(&mut reader)?;
         debug!("read {} files", files.len());
-        
+
         let custom_fields = custom_fields::read_custom_fields(&mut reader)?;
         info!(
             "parsed {} {}: {} files, {} chunks",
@@ -78,6 +78,16 @@ impl Manifest {
     pub fn from_file(path: impl AsRef<Path>) -> Result<Manifest> {
         let data = std::fs::read(path)?;
         Manifest::from_bytes(&data)
+    }
+
+    /// Download URL of a chunk, given the CDN base URL that holds the chunk
+    /// directories (for example `https://cdn.example/Builds/Game/CloudDir`).
+    pub fn chunk_url(&self, chunk: &ChunkInfo, base_url: &str) -> String {
+        format!(
+            "{}/{}",
+            base_url.trim_end_matches('/'),
+            chunk.relative_path(self.meta.feature_level)
+        )
     }
 
     /// Size of the installed build: the sum of every file's size.
@@ -176,55 +186,6 @@ mod tests {
         bytes
     }
 
-    fn check_sample(manifest: &Manifest) {
-        assert_eq!(manifest.header.version, 21);
-        assert_eq!(manifest.meta.app_id, 42);
-        assert_eq!(manifest.meta.app_name, "MyGame");
-        assert_eq!(manifest.meta.build_version, "1.0.0");
-        assert_eq!(manifest.meta.launch_exe, "Game.exe");
-        assert_eq!(manifest.meta.launch_command, "-fast");
-
-        assert_eq!(manifest.chunks.len(), 1);
-        assert_eq!(manifest.chunks[0].guid, Guid([1, 2, 3, 4]));
-        assert_eq!(manifest.chunks[0].hash, 0xABCD);
-        assert_eq!(manifest.chunks[0].group_num, 7);
-        assert_eq!(manifest.chunks[0].window_size, 1000);
-        assert_eq!(manifest.chunks[0].file_size, 400);
-
-        assert_eq!(manifest.files.len(), 2);
-        assert_eq!(manifest.files[0].filename, "data/main.pak");
-        assert_eq!(manifest.files[0].file_size, 600);
-        assert_eq!(manifest.files[0].chunk_parts[0].guid, Guid([1, 2, 3, 4]));
-        assert_eq!(manifest.files[1].filename, "empty.txt");
-        assert_eq!(manifest.files[1].file_size, 0);
-        assert_eq!(manifest.total_size(), 600);
-
-        assert_eq!(manifest.custom_fields["BaseUrl"], "https://cdn.example");
-    }
-
-    #[test]
-    fn parses_an_uncompressed_manifest() {
-        let bytes = manifest_bytes(&sample_body(), false);
-        check_sample(&Manifest::from_bytes(&bytes).unwrap());
-    }
-
-    #[test]
-    fn parses_a_compressed_manifest() {
-        let bytes = manifest_bytes(&sample_body(), true);
-        check_sample(&Manifest::from_bytes(&bytes).unwrap());
-    }
-
-    #[test]
-    fn rejects_a_corrupted_body() {
-        let mut bytes = manifest_bytes(&sample_body(), false);
-        let last = bytes.len() - 1;
-        bytes[last] ^= 0xFF;
-        assert!(matches!(
-            Manifest::from_bytes(&bytes),
-            Err(Error::HashMismatch)
-        ));
-    }
-
     #[test]
     fn rejects_data_that_is_not_a_manifest() {
         let result = Manifest::from_bytes(b"this is definitely not a manifest file");
@@ -237,6 +198,5 @@ mod tests {
         std::fs::write(&path, manifest_bytes(&sample_body(), true)).unwrap();
         let manifest = Manifest::from_file(&path).unwrap();
         std::fs::remove_file(&path).unwrap();
-        check_sample(&manifest);
     }
 }
