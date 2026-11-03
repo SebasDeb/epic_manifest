@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use flate2::read::ZlibDecoder;
+use log::error;
 use sha1::{Digest, Sha1};
 
 use crate::error::{Error, Result};
@@ -39,8 +40,11 @@ impl Header {
     pub fn read(reader: &mut Reader) -> Result<Header> {
         let magic = reader.read_u32()?;
         if magic != MAGIC {
+            error!("magic number 0x{:08X} verified", magic);
             return Err(Error::BadMagic { found: magic });
         }
+
+
         let header_size = reader.read_u32()?;
         let size_uncompressed = reader.read_u32()?;
         let size_compressed = reader.read_u32()?;
