@@ -5,6 +5,9 @@ use epic_manifest::Manifest;
 const FILES_SHOWN: usize = 40;
 
 fn main() -> ExitCode {
+    // Colored output; RUST_LOG=debug shows the parser's internal steps.
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
+
     let Some(path) = std::env::args().nth(1) else {
         eprintln!("usage: cargo run --example dump -- <path to .manifest>");
         return ExitCode::from(2);
@@ -16,7 +19,7 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(error) => {
-            eprintln!("could not parse {path}: {error}");
+            log::error!("could not parse {path}: {error}");
             ExitCode::FAILURE
         }
     }

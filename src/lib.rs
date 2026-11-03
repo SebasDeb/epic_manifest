@@ -20,6 +20,7 @@ pub use header::{Header, HeaderEncryption};
 pub use meta::Meta;
 
 use error::Result;
+use log::{debug, info};
 use reader::Reader;
 
 /// A fully parsed manifest.
@@ -35,15 +36,34 @@ pub struct Manifest {
 impl Manifest {
     /// Parses a manifest from the raw bytes of a `.manifest` file.
     pub fn from_bytes(data: &[u8]) -> Result<Manifest> {
+        debug!("parsing manifest, {} bytes", data.len());
         let mut reader = Reader::new(data);
         let header = Header::read(&mut reader)?;
+        debug!(
+            "header: version {}, compressed {}, encrypted {}",
+            header.version,
+            header.is_compressed(),
+            header.is_encrypted()
+        );
         let body = header.decode_body(reader.read_rest())?;
+        debug!("body decoded and SHA-1 verified, {} bytes", body.len());
 
         let mut reader = Reader::new(&body);
         let meta = Meta::read(&mut reader)?;
         let chunks = chunks::read_chunks(&mut reader)?;
+        debug!("read {} chunks", chunks.len());
+
         let files = files::read_files(&mut reader)?;
+        debug!("read {} files", files.len());
+        
         let custom_fields = custom_fields::read_custom_fields(&mut reader)?;
+        info!(
+            "parsed {} {}: {} files, {} chunks",
+            meta.app_name,
+            meta.build_version,
+            files.len(),
+            chunks.len()
+        );
 
         Ok(Manifest {
             header,

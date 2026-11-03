@@ -19,6 +19,10 @@ size and the first 20 files):
 cargo run --example dump -- path/to/game.manifest
 ```
 
+The library logs through the [`log`](https://docs.rs/log) facade and never
+chooses a logger itself. The example installs a colored `env_logger`; set
+`RUST_LOG=debug` to see each parsing step.
+
 Real manifests are not part of this repository. If you want to run the
 example against one, a good place to keep it is `tests/fixtures/`, which is
 git-ignored.
