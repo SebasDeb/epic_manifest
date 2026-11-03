@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
+use crate::binary::Reader;
 use crate::error::Result;
-use crate::reader::Reader;
 
 /// Reads the key/value pairs the build tooling attaches to a manifest. Keys
 /// are stored first, then all values. A repeated key keeps its last value.

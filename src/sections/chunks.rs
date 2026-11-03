@@ -1,6 +1,6 @@
+use crate::binary::Guid;
+use crate::binary::Reader;
 use crate::error::Result;
-use crate::guid::Guid;
-use crate::reader::Reader;
 
 // Versions of the chunk list section, as in Unreal's EChunkDataListVersion.
 const SERIALISES_ENCRYPTION_SECRET_ID: u8 = 1;

@@ -1,6 +1,6 @@
+use crate::binary::Guid;
+use crate::binary::Reader;
 use crate::error::{Error, Result};
-use crate::guid::Guid;
-use crate::reader::Reader;
 
 // Versions of the file list section, as in Unreal's EFileManifestListVersion.
 const HAS_MD5_AND_MIME_TYPE: u8 = 1;

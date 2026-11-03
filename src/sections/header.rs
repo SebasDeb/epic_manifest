@@ -4,8 +4,8 @@ use flate2::read::ZlibDecoder;
 use log::error;
 use sha1::{Digest, Sha1};
 
+use crate::binary::Reader;
 use crate::error::{Error, Result};
-use crate::reader::Reader;
 
 const MAGIC: u32 = 0x44BE_C00C;
 const STORED_COMPRESSED: u8 = 1 << 0;

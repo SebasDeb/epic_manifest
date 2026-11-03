@@ -1,5 +1,5 @@
+use crate::binary::Guid;
 use crate::error::{Error, Result};
-use crate::guid::Guid;
 
 /// Where a manifest section ends and which version it was written with.
 pub struct Section {

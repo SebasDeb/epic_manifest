@@ -1,27 +1,23 @@
 //! Parser for Epic Games binary `.manifest` files (BuildPatchServices).
 
-mod chunks;
-mod custom_fields;
+mod binary;
 mod error;
-mod files;
-mod guid;
-mod header;
-mod meta;
-mod reader;
+mod sections;
 
 use std::collections::HashMap;
 use std::path::Path;
 
-pub use chunks::ChunkInfo;
+pub use binary::Guid;
 pub use error::Error;
-pub use files::{ChunkPart, FileManifest};
-pub use guid::Guid;
-pub use header::{Header, HeaderEncryption};
-pub use meta::Meta;
+pub use sections::chunks::ChunkInfo;
+pub use sections::files::{ChunkPart, FileManifest};
+pub use sections::header::{Header, HeaderEncryption};
+pub use sections::meta::Meta;
 
+use binary::Reader;
 use error::Result;
 use log::{debug, info};
-use reader::Reader;
+use sections::{chunks, custom_fields, files};
 
 /// A fully parsed manifest.
 #[derive(Debug, Clone, PartialEq, Eq)]

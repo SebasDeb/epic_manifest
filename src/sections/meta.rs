@@ -1,5 +1,5 @@
+use crate::binary::Reader;
 use crate::error::Result;
-use crate::reader::Reader;
 
 /// Build metadata: which app this is and how to launch it.
 #[derive(Debug, Clone, PartialEq, Eq)]
